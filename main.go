@@ -13,14 +13,13 @@ import (
 	"time"
 	"crypto/md5"
 	"html"
+	"encoding/base64"
+	"strings"
 )
 
 const port int = 3000
 const uploadDir string = "./files/"
 const dbfile string = "./data.db"
-
-var db *sql.DB
-
 const crTbQ string = `CREATE TABLE IF NOT EXISTS files 
 (
 	id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
@@ -29,7 +28,9 @@ const crTbQ string = `CREATE TABLE IF NOT EXISTS files
 	comment TEXT,
 	create_date TEXT NOT NULL	
 )`
+const username = "upload"
 
+var db *sql.DB
 
 func init(){
 
@@ -57,6 +58,12 @@ type File struct {
 }
 
 func IndexHandler(w http.ResponseWriter, r *http.Request){
+
+	if !BasicAuth(w, r){
+		RequestAuth(w, r)
+		return
+	}
+
 	rows, _ := db.Query("SELECT id, name, path, comment, create_date FROM files")
 	defer rows.Close()
 	data := make([]File,0)
@@ -75,6 +82,12 @@ func IndexHandler(w http.ResponseWriter, r *http.Request){
 }
 
 func UploadHandler(w http.ResponseWriter, r *http.Request){
+
+	if !BasicAuth(w, r){
+		RequestAuth(w, r)
+		return
+	}
+
 	if r.Method == "GET" {
 		crutime := time.Now().Unix()
 		h := md5.New()
@@ -107,6 +120,12 @@ func UploadHandler(w http.ResponseWriter, r *http.Request){
 }
 
 func DeleteHandler(w http.ResponseWriter, r *http.Request){
+
+	if !BasicAuth(w, r){
+		RequestAuth(w, r)
+		return
+	}
+
 	if r.Method == "POST"{
 		id := r.URL.Query().Get("id")
 		id = html.EscapeString(id)
@@ -116,6 +135,37 @@ func DeleteHandler(w http.ResponseWriter, r *http.Request){
 		db.Exec("DELETE FROM files WHERE id = $1", id)
 	}
 	http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+}
+
+func BasicAuth(w http.ResponseWriter, r *http.Request) bool {
+	s := strings.SplitN(r.Header.Get("Authorization")," ", 2)
+	if len(s) != 2 {
+		return false
+	}
+
+	b, err := base64.StdEncoding.DecodeString(s[1])
+	if err != nil {
+		return false
+	}
+
+	pair := strings.SplitN(string(b), ":", 2)
+	if len(pair) != 2 {
+		return false
+	}
+
+	//current password is the current date (just numbers)
+	//Example: 20151118 - November 18 2015
+	year, month, day := time.Now().Date()
+	pass := fmt.Sprintf("%d%d%d", year, month, day) 
+
+	return pair[0] == string(username) && pair[1] == string(pass)
+}
+
+func RequestAuth(w http.ResponseWriter, r *http.Request){
+	w.Header().Set("WWW-Authenticate",`Basic realm="Beware! Protected website!"`)
+	w.WriteHeader(401)
+	w.Write([]byte("401 Unauthorized\n"))
+	return
 }
 
 func main(){
