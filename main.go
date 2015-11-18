@@ -93,11 +93,10 @@ func UploadHandler(w http.ResponseWriter, r *http.Request){
 		h := md5.New()
 		io.WriteString(h, strconv.FormatInt(crutime, 10))
 		token := fmt.Sprintf("%x", h.Sum(nil))
-        t, _ := template.ParseFiles("./tmpl/upload.gtpl")
+		t, _ := template.ParseFiles("./tmpl/upload.gtpl")
 		t.Execute(w, token)
 	} else {
-        //64MB
-		r.ParseMultipartForm(64 << 20)
+        r.ParseMultipartForm(32 << 20)
 		file, handler, err := r.FormFile("uploadfile")
 		if err != nil {
 			fmt.Println(err)
