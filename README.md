@@ -11,7 +11,7 @@ Password are the numbers of the current date - Example: 20151118 - November 18 2
 #Runtime dependencies:
 sqlite3
 
-#Compiling
+#Compiling:
 1. Install the Go programming language for your platform https://golang.org/
 
 2. Install Sqlite3 Go driver:
