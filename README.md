@@ -13,12 +13,12 @@ sqlite3
 
 #Compiling:
 1. Install the Go programming language for your platform https://golang.org/
-
-2. Install Sqlite3 Go driver:
+2. Install Sqlite for your platform https://www.sqlite.org/
+3. Install Sqlite3 Go driver:
 ```
 go get github.com/mattn/go-sqlite3
 ```
-3. Compile & Run using:
+4. Compile & Run using:
 ```
 go build && ./go-upload
 ```
