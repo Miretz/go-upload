@@ -167,12 +167,24 @@ func RequestAuth(w http.ResponseWriter, r *http.Request){
 	return
 }
 
+func ServeStaticFiles(w http.ResponseWriter, r *http.Request){
+
+	if !BasicAuth(w, r){
+		RequestAuth(w, r)
+		return
+	}
+
+	fs := http.FileServer(http.Dir("files"))
+	fileHandler := http.StripPrefix("/files/", fs).ServeHTTP
+	fileHandler(w, r)
+
+}
+
 func main(){
 	fmt.Printf("Starting server on http://localhost:%d\n", port)
 	http.HandleFunc("/", IndexHandler)
 	http.HandleFunc("/upload", UploadHandler)
 	http.HandleFunc("/delete", DeleteHandler)
-	fs := http.FileServer(http.Dir("files"))
-	http.Handle("/files/", http.StripPrefix("/files/", fs))
+	http.HandleFunc("/files/", ServeStaticFiles)
 	http.ListenAndServe(":" + strconv.Itoa(port), nil)
 }
