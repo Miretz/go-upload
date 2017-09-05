@@ -29,11 +29,11 @@ const crTbQ string = `CREATE TABLE IF NOT EXISTS files
 	create_date TEXT NOT NULL	
 )`
 const username = "upload"
+const pass = "pass123"
 
 var db *sql.DB
 
 func init(){
-
 	//Init database
 	var err error
 	db, err = sql.Open("sqlite3", dbfile)
@@ -151,12 +151,6 @@ func BasicAuth(w http.ResponseWriter, r *http.Request) bool {
 	if len(pair) != 2 {
 		return false
 	}
-
-	//current password is the current date (just numbers)
-	//Example: 20151118 - November 18 2015
-	year, month, day := time.Now().Date()
-	pass := fmt.Sprintf("%d%d%d", year, month, day) 
-
 	return pair[0] == string(username) && pair[1] == string(pass)
 }
 
@@ -168,7 +162,6 @@ func RequestAuth(w http.ResponseWriter, r *http.Request){
 }
 
 func ServeStaticFiles(w http.ResponseWriter, r *http.Request){
-
 	if !BasicAuth(w, r){
 		RequestAuth(w, r)
 		return
@@ -177,7 +170,6 @@ func ServeStaticFiles(w http.ResponseWriter, r *http.Request){
 	fs := http.FileServer(http.Dir("files"))
 	fileHandler := http.StripPrefix("/files/", fs).ServeHTTP
 	fileHandler(w, r)
-
 }
 
 func main(){
